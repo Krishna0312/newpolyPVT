@@ -166,7 +166,7 @@ def load_checkpoint(checkpoint):
 #############  Train - meandice score ###########
     
 def plot_train_dice(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+    color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
     for i in range(len(name)):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
@@ -184,7 +184,7 @@ def plot_train_dice(dict_plot=None, name = None):
 #############  Validation - meandice score ###########
     
 def plot_train(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+    color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
     for i in range(len(name)):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
@@ -201,15 +201,15 @@ def plot_train(dict_plot=None, name = None):
  
     #############  Train - loss curve ###########
     
-def plot_train_loss(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+def plot_train_loss(train_loss=None, loss_name = None):
+    color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
-    for i in range(len(name)):
-        plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+    for i in range(len(loss_name)):
+        plt.plot(train_loss[loss_name[i]], label=loss_name[i], color=color[i], linestyle=line[(i + 1) % 2])
         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
-        transfuse = {'ValA': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
-        plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+        transfuse = {'train_loss_p1': 0.902, 'train_loss_p2': 0.83, 'train_loss_p1p2': 0.773, 'train_loss_total': 0.70}   #'CVC-300' 
+        plt.axhline(y=transfuse[loss_name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.title('Training - loss vs epochs')
@@ -220,7 +220,7 @@ def plot_train_loss(dict_plot=None, name = None):
     #############    Validation - loss curve ###########
     
 def plot_val_loss(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'gold', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+    color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
     for i in range(len(name)):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
@@ -244,6 +244,9 @@ if __name__ == '__main__':
     dict_plot = {'Val':[], 'TestA':[], 'TestB':[]}  #'CVC-300'
     #'GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test'
     name = ['Val', 'TestA', 'TestB']   #'CVC-300'
+    
+    train_loss = {'train_loss_p1':[], 'train_loss_p2':[], 'train_loss_p1p2':[],  'train_loss_total':[]}
+    loss_name = {'train_loss_p1', 'train_loss_p2', 'train_loss_p1p2', 'train_loss_total'}
     ##################model_name#############################
     model_name = 'PolypPVT'
     ###############################################
@@ -327,7 +330,10 @@ if __name__ == '__main__':
             
         adjust_lr(optimizer, opt.lr, epoch, 0.1, 200)
         train(train_loader, model, optimizer, epoch, opt.test_path)
-        plot_train(dict_plot, name)
+        plot_train(dict_plot, name)                           # validation--> meandice score vs epochs
+        plot_train_loss(train_loss, loss_name)                # training --> loss vs epochs
+        
     
     # plot the eval.png in the training stage
     plot_train(dict_plot, name)
+    plot_train_loss(train_loss, loss_name)
