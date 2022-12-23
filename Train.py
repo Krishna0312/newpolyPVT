@@ -127,7 +127,7 @@ def train(train_loader, model, optimizer, epoch, test_path):
    
     test1path = './dataset/TestDataset/'
     if (epoch + 1) % 1 == 0:
-        for dataset in ['ValA', 'ValB']:   #'CVC-300','GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB',          ####### updated ########
+        for dataset in ['Val']:   #'CVC-300','GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB',          ####### updated ########
             dataset_dice = test(model, test1path, dataset)
             logging.info('epoch: {}, dataset: {}, dice: {}'.format(epoch, dataset, dataset_dice))
             print(dataset, ': ', dataset_dice)
@@ -172,7 +172,7 @@ def plot_train_dice(dict_plot=None, name = None):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
-        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        transfuse = {'Val': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("dice")
@@ -190,7 +190,7 @@ def plot_train(dict_plot=None, name = None):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
-        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        transfuse = {'Val': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("dice")
@@ -208,7 +208,7 @@ def plot_train_loss(dict_plot=None, name = None):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
-        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        transfuse = {'ValA': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("loss")
@@ -226,7 +226,7 @@ def plot_val_loss(dict_plot=None, name = None):
         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
-        transfuse = {'ValA': 0.902, 'ValB': 0.918, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+        transfuse = {'ValA': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("loss")
@@ -241,9 +241,9 @@ def plot_val_loss(dict_plot=None, name = None):
     
 if __name__ == '__main__':
     # 'GlaS':[], 'CVC-ClinicDB':[], 'Kvasir':[], 'CVC-ColonDB':[], 'ETIS-LaribPolypDB':[], 'test':[]
-    dict_plot = {'ValA':[], 'ValB':[], 'TestA':[], 'TestB':[]}  #'CVC-300'
+    dict_plot = {'Val':[], 'TestA':[], 'TestB':[]}  #'CVC-300'
     #'GlaS', 'CVC-ClinicDB', 'Kvasir', 'CVC-ColonDB', 'ETIS-LaribPolypDB', 'test'
-    name = ['ValA', 'ValB', 'TestA', 'TestB']   #'CVC-300'
+    name = ['Val', 'TestA', 'TestB']   #'CVC-300'
     ##################model_name#############################
     model_name = 'PolypPVT'
     ###############################################
