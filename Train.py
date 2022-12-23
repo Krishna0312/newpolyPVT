@@ -26,6 +26,7 @@ def structure_loss(pred, mask):
 
 
 def test(model, path, dataset):
+    global val_loss                                                                     ###### updated #######
 
     data_path = os.path.join(path, dataset)
     image_root = '{}/images/'.format(data_path)
@@ -41,6 +42,8 @@ def test(model, path, dataset):
         image = image.cuda()
 
         res, res1  = model(image)
+        ###### calculate loss & append it to global val_loss #######
+        
         # eval Dice
         res = F.upsample(res + res1 , size=gt.shape, mode='bilinear', align_corners=False)
         res = res.sigmoid().data.cpu().numpy().squeeze()
@@ -219,15 +222,15 @@ def plot_train_loss(train_loss=None, loss_name = None):
  
     #############    Validation - loss curve ###########
     
-def plot_val_loss(dict_plot=None, name = None):
+def plot_val_loss(val_loss=None, valloss_name = None):
     color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
     line = ['-', "--"]
-    for i in range(len(name)):
-        plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+    for i in range(len(valloss_name)):
+        plt.plot(val_loss[valloss_name[i]], label=valloss_name[i], color=color[i], linestyle=line[(i + 1) % 2])
         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
         transfuse = {'ValA': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
-        plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+        plt.axhline(y=transfuse[valloss_name[i]], color=color[i], linestyle='-')
     plt.xlabel("epoch")
     plt.ylabel("loss")
     plt.title('Validation - loss vs epochs')
@@ -247,6 +250,9 @@ if __name__ == '__main__':
     
     train_loss = {'train_loss_p1':[], 'train_loss_p2':[], 'train_loss_p1p2':[],  'train_loss_total':[]}
     loss_name = {'train_loss_p1', 'train_loss_p2', 'train_loss_p1p2', 'train_loss_total'}
+    
+    val_loss = {'val_loss_p1':[], 'val_loss_p2':[], 'val_loss_p1p2':[],  'val_loss_total':[]}
+    valloss_name = {'val_loss_p1', 'val_loss_p2', 'val_loss_p1p2', 'val_loss_total'}
     ##################model_name#############################
     model_name = 'PolypPVT'
     ###############################################
