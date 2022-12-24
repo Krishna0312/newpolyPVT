@@ -24,9 +24,17 @@ def structure_loss(pred, mask):
 
     return (wbce + wiou).mean()
 
+alpha = 1.5
+beta = 2
 
 def test(model, path, dataset):
+    
     global val_loss                                                                     ###### updated #######
+    loss_P2_rec = AvgMeter()
+    loss_P1_rec = AvgMeter()
+    loss_p1p2_rec = AvgMeter()
+    loss_total_rec = AvgMeter()
+   
 
     data_path = os.path.join(path, dataset)
     image_root = '{}/images/'.format(data_path)
@@ -36,13 +44,30 @@ def test(model, path, dataset):
     test_loader = test_dataset(image_root, gt_root, 352)
     DSC = 0.0
     for i in range(num1):
-        image, gt, name = test_loader.load_data()
-        gt = np.asarray(gt, np.float32)
+        image, gts, name = test_loader.load_data()                 #gt
+        gt = np.asarray(gts, np.float32)
         gt /= (gt.max() + 1e-8)
         image = image.cuda()
 
         res, res1  = model(image)
+        
+        
         ###### calculate loss & append it to global val_loss #######
+
+        loss_P1 = structure_loss(res, gts)
+        loss_P2 = structure_loss(res1, gts)
+        loss_p1p2 = sklearn.metrics.mean_squared_error(loss_P1, loss_P2)
+        loss = loss_P1 + alpha*loss_P2 + beta*loss_p1p2
+        
+        loss_P2_rec.update(loss_P2.data, opt.batchsize)
+        loss_P1_rec.update(loss_P1.data, opt.batchsize)
+        loss_p1p2_rec.update(loss_p1p2.data, opt.batchsize)
+        loss_total_rec.update(loss.data, opt.batchsize)
+        
+        val_loss['val_loss_p1'].append(loss_P1_rec)
+        val_loss['val_loss_p2'].append(loss_P2_rec)
+        val_loss['val_loss_p1p2'].append(loss_p1p2_rec)
+        val_loss['val_loss_total'].append(loss_total_rec)
         
         # eval Dice
         res = F.upsample(res + res1 , size=gt.shape, mode='bilinear', align_corners=False)
@@ -74,8 +99,7 @@ def train(train_loader, model, optimizer, epoch, test_path):
     loss_P1_record = AvgMeter()
     loss_p1p2_record = AvgMeter()
     loss_total_record = AvgMeter()
-#     train_loss = 0.0                                                            ########## updated #############
-#     valid_loss = 0.0 
+
     for i, pack in enumerate(train_loader, start=1):
         for rate in size_rates:
             optimizer.zero_grad()
@@ -107,7 +131,7 @@ def train(train_loader, model, optimizer, epoch, test_path):
                 loss_P1_record.update(loss_P1.data, opt.batchsize)
                 loss_p1p2_record.update(loss_p1p2.data, opt.batchsize)
                 loss_total_record.update(loss.data, opt.batchsize)
-            train_loss += loss.item()*data.size(0)                                       ############ updated #############
+          #  train_loss += loss.item()*data.size(0)                                       ############ updated #############
         # ---- train visualization ----
         if i % 20 == 0 or i == total_step:
             print('{} Epoch [{:03d}/{:03d}], Step [{:04d}/{:04d}], '
@@ -168,20 +192,20 @@ def load_checkpoint(checkpoint):
 
 #############  Train - meandice score ###########
     
-def plot_train_dice(dict_plot=None, name = None):
-    color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
-    line = ['-', "--"]
-    for i in range(len(name)):
-        plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
-        #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
-        ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
-        transfuse = {'Val': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
-        plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
-    plt.xlabel("epoch")
-    plt.ylabel("dice")
-    plt.title('Training - meandice score vs epochs')
-    plt.legend()
-    plt.savefig('train_meandice-epoch.png')
+# def plot_train_dice(dict_plot=None, name = None):
+#     color = ['red', 'lawngreen', 'blue'] #'lime', 'gold', 'm', 'plum', 'blue'
+#     line = ['-', "--"]
+#     for i in range(len(name)):
+#         plt.plot(dict_plot[name[i]], label=name[i], color=color[i], linestyle=line[(i + 1) % 2])
+#         #### transfuse and axhline are just to add horizontal line.. nothing to do with chart data ####
+#         ## 'GlaS': 0.902, 'CVC-ClinicDB': 0.918, 'Kvasir': 0.918, 'CVC-ColonDB': 0.773,'ETIS-LaribPolypDB': 0.733, 'test':0.83
+#         transfuse = {'Val': 0.902, 'TestA': 0.83, 'TestB': 0.773}   #'CVC-300' 
+#         plt.axhline(y=transfuse[name[i]], color=color[i], linestyle='-')
+#     plt.xlabel("epoch")
+#     plt.ylabel("dice")
+#     plt.title('Training - meandice score vs epochs')
+#     plt.legend()
+#     plt.savefig('train_meandice-epoch.png')
 
 
 #############  Validation - meandice score ###########
@@ -338,8 +362,10 @@ if __name__ == '__main__':
         train(train_loader, model, optimizer, epoch, opt.test_path)
         plot_train(dict_plot, name)                           # validation--> meandice score vs epochs
         plot_train_loss(train_loss, loss_name)                # training --> loss vs epochs
-        
+        plot_val_loss(val_loss, valloss_name)                 # validation -> loss vs epochs
+         
     
     # plot the eval.png in the training stage
     plot_train(dict_plot, name)
     plot_train_loss(train_loss, loss_name)
+    plot_val_loss(val_loss, valloss_name)
